@@ -1,20 +1,34 @@
 class RailsBot < Thor
   include Thor::Actions
 
-  desc "prepare_full_stack", "Runs all tasks to initialize an app with html views"
+  desc "prepare_full_stack", "Run tasks for app with html views"
   def prepare_full_stack
+    initialize_git_repo
     remove_turbolinks
     remove_jbuilder
     swap_sqlite3_to_pg
     install_rspec
     install_bootstrap
+    commit_work
   end
 
-  desc "prepare_api", "Runs all tasks to initialize an API"
+  desc "prepare_api", "Run tasks for API"
   def prepare_api
+    initialize_git_repo
     remove_turbolinks
     swap_sqlite3_to_pg
     install_rspec
+    commit_work
+  end
+
+  desc "initialize_git_repo", "Creates a git repo in the app"
+  def inialize_git_repo
+    # Yes, I know this can be done with the --git flag, but I don't ever remember it
+    unless File.exist?(".git")
+      `git init`
+      `git add .`
+      `git commit -m "Initial Commit"`
+    end
   end
 
   desc "remove_turbolinks", "Removes Turbolinks from the app"
@@ -45,7 +59,7 @@ class RailsBot < Thor
     end
   end
 
-  desc "install_bootstrap", "Seriously? These should all be self-explanatory"
+  desc "install_bootstrap", "Install bootstrap"
   def install_bootstrap
     unless File.readlines('Gemfile').grep(/bootstrap-sass/).any?
       add_bootstrap_to_gemfile
@@ -89,5 +103,10 @@ class RailsBot < Thor
     insert_into_file('app/assets/javascripts/application.js',
                       "\n//= require bootstrap-sprockets\n",
                       after: /require jquery_ujs/)
+  end
+
+  def commit_work
+    `git add .`
+    `git commit -m "Prep rails app for real work"`
   end
 end
