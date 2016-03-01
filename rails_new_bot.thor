@@ -7,6 +7,7 @@ class RailsBot < Thor
     remove_turbolinks
     remove_jbuilder
     swap_sqlite3_to_pg
+    add_essential_gems
     install_rspec
     install_bootstrap
     commit_work
@@ -17,12 +18,13 @@ class RailsBot < Thor
     initialize_git_repo
     remove_turbolinks
     swap_sqlite3_to_pg
+    add_essential_gems
     install_rspec
     commit_work
   end
 
   desc "initialize_git_repo", "Creates a git repo in the app"
-  def inialize_git_repo
+  def initialize_git_repo
     # Yes, I know this can be done with the --git flag, but I don't ever remember it
     unless File.exist?(".git")
       `git init`
@@ -81,8 +83,32 @@ class RailsBot < Thor
     `bundle install`
   end
 
+  def add_essential_gems
+    unless essential_gems_installed?
+      insert_into_file("Gemfile",
+                       "\n  gem 'pry-byebug'\n"\
+                       "  gem 'faker' \n"\
+                       "  gem 'factory_girl_rails'\n"\
+                       "  gem 'database_cleaner'",
+                       after: /group :development, :test do/
+                      )
+      append_file("Gemfile",
+                  "group :test do\n"\
+                  "\n  gem 'cucumber-rails', require: false\n"\
+                  "  gem 'shoulda-matchers', '~> 3.0'\n"\
+                  "end \n"
+                 )
+      `bundle`
+      `rails g cucumber:install`
+    end
+  end
+
+  def essential_gems_installed?
+    File.readlines('Gemfile').grep(/database_cleaner/).any?
+  end
+
   def add_bootstrap_to_gemfile
-    insert_into_file('Gemfile',
+    insert_into_file("Gemfile",
                       "gem 'bootstrap-sass', '~> 3.3.6'\n",
                       before: /group :development, :test do/
                     )
