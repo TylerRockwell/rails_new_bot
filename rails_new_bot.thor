@@ -25,6 +25,7 @@ class RailsBot < Thor
   def finalize
     commit_work
     kill_spring
+    destroy_database
   end
 
   ### Shell Commands ###
@@ -34,6 +35,10 @@ class RailsBot < Thor
 
   def kill_spring
     `spring stop`
+  end
+
+  def destroy_database
+    `rake db:drop`
   end
 
   ### Installer Methods ###
